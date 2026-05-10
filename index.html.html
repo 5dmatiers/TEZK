@@ -1,0 +1,1071 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Quiz Game Pro</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;800;900&family=Orbitron:wght@700;900&display=swap');
+
+  :root {
+    --bg1: #0f0c29;
+    --bg2: #302b63;
+    --bg3: #24243e;
+    --card-bg: rgba(255,255,255,0.07);
+    --card-border: rgba(255,255,255,0.15);
+    --text: #f0f0ff;
+    --text-sub: rgba(240,240,255,0.6);
+    --accent: #7c3aed;
+    --accent2: #06b6d4;
+    --correct: #10b981;
+    --wrong: #ef4444;
+    --btn-bg: rgba(255,255,255,0.08);
+    --btn-border: rgba(255,255,255,0.18);
+    --shadow: 0 8px 32px rgba(0,0,0,0.4);
+    --radius: 20px;
+    --theme-color: #7c3aed;
+  }
+
+  [data-theme="light"] {
+    --bg1: #e8eaf6;
+    --bg2: #c5cae9;
+    --bg3: #d1d5f0;
+    --card-bg: rgba(255,255,255,0.75);
+    --card-border: rgba(100,100,200,0.2);
+    --text: #1a1a2e;
+    --text-sub: rgba(26,26,46,0.6);
+    --btn-bg: rgba(255,255,255,0.7);
+    --btn-border: rgba(100,100,200,0.3);
+    --shadow: 0 8px 32px rgba(0,0,0,0.15);
+  }
+
+  * { margin:0; padding:0; box-sizing:border-box; }
+
+  body {
+    font-family: 'Tajawal', sans-serif;
+    background: linear-gradient(135deg, var(--bg1), var(--bg2), var(--bg3));
+    min-height: 100vh;
+    color: var(--text);
+    transition: background 0.4s, color 0.4s;
+    overflow-x: hidden;
+  }
+
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background:
+      radial-gradient(ellipse at 20% 20%, rgba(124,58,237,0.25) 0%, transparent 60%),
+      radial-gradient(ellipse at 80% 80%, rgba(6,182,212,0.2) 0%, transparent 60%);
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  .screen {
+    position: fixed;
+    inset: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+    z-index: 1;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.4s ease;
+  }
+  .screen.active {
+    opacity: 1;
+    pointer-events: all;
+  }
+
+  /* ===== GLASS CARD ===== */
+  .glass {
+    background: var(--card-bg);
+    border: 1px solid var(--card-border);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border-radius: var(--radius);
+    box-shadow: var(--shadow);
+  }
+
+  /* ===== SPLASH / MAIN MENU ===== */
+  #screen-menu {
+    gap: 28px;
+  }
+
+  .logo-wrap {
+    text-align: center;
+    animation: floatLogo 3s ease-in-out infinite;
+  }
+  @keyframes floatLogo {
+    0%,100% { transform: translateY(0); }
+    50% { transform: translateY(-10px); }
+  }
+
+  .logo-icon {
+    font-size: 72px;
+    line-height: 1;
+    filter: drop-shadow(0 0 20px var(--theme-color));
+  }
+
+  .logo-title {
+    font-family: 'Orbitron', sans-serif;
+    font-size: clamp(24px, 6vw, 38px);
+    font-weight: 900;
+    background: linear-gradient(135deg, #fff 0%, var(--accent2) 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    letter-spacing: 2px;
+    margin-top: 8px;
+  }
+
+  .logo-sub {
+    color: var(--text-sub);
+    font-size: 14px;
+    margin-top: 4px;
+    letter-spacing: 1px;
+  }
+
+  .menu-card {
+    width: 100%;
+    max-width: 400px;
+    padding: 28px;
+  }
+
+  .menu-title {
+    text-align: center;
+    font-size: 18px;
+    font-weight: 700;
+    color: var(--text-sub);
+    margin-bottom: 20px;
+    letter-spacing: 1px;
+  }
+
+  .section-btns {
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+  }
+
+  .section-btn {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    padding: 18px 22px;
+    background: var(--btn-bg);
+    border: 1px solid var(--btn-border);
+    border-radius: 16px;
+    cursor: pointer;
+    color: var(--text);
+    font-family: 'Tajawal', sans-serif;
+    font-size: 18px;
+    font-weight: 700;
+    transition: all 0.3s;
+    position: relative;
+    overflow: hidden;
+  }
+  .section-btn::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(135deg, var(--theme-color), transparent);
+    opacity: 0;
+    transition: opacity 0.3s;
+    border-radius: inherit;
+  }
+  .section-btn:hover::before { opacity: 0.15; }
+  .section-btn:hover { transform: translateX(-4px); border-color: var(--theme-color); }
+  .section-btn:active { transform: scale(0.97); }
+
+  .section-btn .s-icon { font-size: 32px; z-index: 1; }
+  .section-btn .s-text { z-index: 1; text-align: right; }
+  .section-btn .s-label { font-size: 18px; font-weight: 800; }
+  .section-btn .s-count { font-size: 12px; color: var(--text-sub); font-weight: 500; }
+  .section-btn .s-arrow { margin-right: auto; z-index: 1; font-size: 20px; color: var(--text-sub); }
+
+  .menu-footer {
+    display: flex;
+    gap: 12px;
+    justify-content: center;
+    margin-top: 4px;
+  }
+
+  .icon-btn {
+    width: 48px; height: 48px;
+    border-radius: 50%;
+    background: var(--btn-bg);
+    border: 1px solid var(--btn-border);
+    cursor: pointer;
+    font-size: 22px;
+    display: flex; align-items: center; justify-content: center;
+    color: var(--text);
+    transition: all 0.3s;
+  }
+  .icon-btn:hover { background: var(--theme-color); border-color: var(--theme-color); transform: scale(1.1); }
+
+  /* ===== SETTINGS SCREEN ===== */
+  .settings-card {
+    width: 100%;
+    max-width: 400px;
+    padding: 28px;
+  }
+
+  .settings-header {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 24px;
+  }
+
+  .back-btn {
+    width: 40px; height: 40px;
+    border-radius: 50%;
+    background: var(--btn-bg);
+    border: 1px solid var(--btn-border);
+    cursor: pointer;
+    font-size: 20px;
+    display: flex; align-items: center; justify-content: center;
+    color: var(--text);
+    transition: all 0.2s;
+  }
+  .back-btn:hover { background: var(--theme-color); }
+
+  .settings-title {
+    font-size: 22px;
+    font-weight: 800;
+  }
+
+  .setting-group {
+    margin-bottom: 24px;
+  }
+
+  .setting-group-label {
+    font-size: 13px;
+    font-weight: 700;
+    color: var(--text-sub);
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    margin-bottom: 12px;
+  }
+
+  .toggle-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 14px 18px;
+    background: var(--btn-bg);
+    border: 1px solid var(--btn-border);
+    border-radius: 14px;
+  }
+
+  .toggle-label { font-size: 16px; font-weight: 600; }
+
+  .toggle {
+    width: 52px; height: 28px;
+    background: rgba(255,255,255,0.1);
+    border-radius: 14px;
+    position: relative;
+    cursor: pointer;
+    transition: background 0.3s;
+    border: none;
+  }
+  .toggle.on { background: var(--correct); }
+  .toggle::after {
+    content: '';
+    position: absolute;
+    top: 4px; left: 4px;
+    width: 20px; height: 20px;
+    background: #fff;
+    border-radius: 50%;
+    transition: transform 0.3s;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.3);
+  }
+  .toggle.on::after { transform: translateX(24px); }
+
+  .color-options {
+    display: flex;
+    gap: 12px;
+    flex-wrap: wrap;
+  }
+
+  .color-dot {
+    width: 40px; height: 40px;
+    border-radius: 50%;
+    cursor: pointer;
+    border: 3px solid transparent;
+    transition: all 0.2s;
+    position: relative;
+  }
+  .color-dot.active { border-color: #fff; transform: scale(1.15); }
+  .color-dot:hover { transform: scale(1.1); }
+
+  /* ===== QUIZ SCREEN ===== */
+  #screen-quiz {
+    gap: 0;
+    padding: 16px;
+    justify-content: flex-start;
+    overflow-y: auto;
+  }
+
+  .quiz-header {
+    width: 100%;
+    max-width: 560px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 12px 4px;
+    margin-bottom: 12px;
+    flex-shrink: 0;
+  }
+
+  .quiz-section-badge {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 6px 14px;
+    background: var(--btn-bg);
+    border: 1px solid var(--btn-border);
+    border-radius: 24px;
+    font-size: 14px;
+    font-weight: 700;
+  }
+
+  .quiz-counter {
+    font-size: 14px;
+    font-weight: 700;
+    color: var(--text-sub);
+  }
+
+  .quiz-counter span { color: var(--text); font-size: 18px; }
+
+  .quiz-score-badge {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 6px 14px;
+    background: rgba(16,185,129,0.15);
+    border: 1px solid rgba(16,185,129,0.3);
+    border-radius: 24px;
+    font-size: 14px;
+    font-weight: 700;
+    color: var(--correct);
+  }
+
+  .progress-bar-wrap {
+    width: 100%;
+    max-width: 560px;
+    height: 6px;
+    background: rgba(255,255,255,0.1);
+    border-radius: 3px;
+    margin-bottom: 20px;
+    flex-shrink: 0;
+    overflow: hidden;
+  }
+
+  .progress-bar-fill {
+    height: 100%;
+    background: linear-gradient(90deg, var(--theme-color), var(--accent2));
+    border-radius: 3px;
+    transition: width 0.5s ease;
+  }
+
+  .question-card {
+    width: 100%;
+    max-width: 560px;
+    padding: 28px;
+    margin-bottom: 18px;
+    flex-shrink: 0;
+    animation: slideIn 0.4s ease;
+  }
+
+  @keyframes slideIn {
+    from { opacity: 0; transform: translateY(30px) scale(0.97); }
+    to   { opacity: 1; transform: translateY(0) scale(1); }
+  }
+
+  .question-number {
+    font-size: 12px;
+    font-weight: 700;
+    color: var(--theme-color);
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    margin-bottom: 10px;
+  }
+
+  .question-text {
+    font-size: clamp(16px, 4vw, 20px);
+    font-weight: 700;
+    line-height: 1.6;
+    color: var(--text);
+  }
+
+  .answers-grid {
+    width: 100%;
+    max-width: 560px;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    flex-shrink: 0;
+  }
+
+  .answer-btn {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    padding: 16px 20px;
+    background: var(--btn-bg);
+    border: 2px solid var(--btn-border);
+    border-radius: 16px;
+    cursor: pointer;
+    color: var(--text);
+    font-family: 'Tajawal', sans-serif;
+    font-size: 16px;
+    font-weight: 600;
+    text-align: right;
+    transition: all 0.25s;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .answer-btn .ans-label {
+    width: 32px; height: 32px;
+    border-radius: 50%;
+    background: rgba(255,255,255,0.1);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 14px;
+    font-weight: 800;
+    flex-shrink: 0;
+    transition: all 0.25s;
+  }
+
+  .answer-btn:hover:not(:disabled) {
+    background: rgba(255,255,255,0.13);
+    border-color: var(--theme-color);
+    transform: translateX(-4px);
+  }
+  .answer-btn:hover:not(:disabled) .ans-label {
+    background: var(--theme-color);
+  }
+
+  .answer-btn.correct {
+    background: rgba(16,185,129,0.2);
+    border-color: var(--correct);
+    animation: popIn 0.3s ease;
+  }
+  .answer-btn.correct .ans-label { background: var(--correct); }
+
+  .answer-btn.wrong {
+    background: rgba(239,68,68,0.2);
+    border-color: var(--wrong);
+    animation: shake 0.4s ease;
+  }
+  .answer-btn.wrong .ans-label { background: var(--wrong); }
+
+  .answer-btn.show-correct {
+    background: rgba(16,185,129,0.1);
+    border-color: var(--correct);
+  }
+  .answer-btn.show-correct .ans-label { background: var(--correct); }
+
+  @keyframes popIn {
+    0% { transform: scale(1); }
+    50% { transform: scale(1.04); }
+    100% { transform: scale(1); }
+  }
+
+  @keyframes shake {
+    0%,100% { transform: translateX(0); }
+    20% { transform: translateX(-8px); }
+    40% { transform: translateX(8px); }
+    60% { transform: translateX(-6px); }
+    80% { transform: translateX(6px); }
+  }
+
+  .next-btn {
+    width: 100%;
+    max-width: 560px;
+    margin-top: 16px;
+    padding: 18px;
+    border-radius: 16px;
+    border: none;
+    background: linear-gradient(135deg, var(--theme-color), var(--accent2));
+    color: #fff;
+    font-family: 'Tajawal', sans-serif;
+    font-size: 18px;
+    font-weight: 800;
+    cursor: pointer;
+    display: none;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    transition: all 0.2s;
+    box-shadow: 0 4px 20px rgba(124,58,237,0.4);
+    flex-shrink: 0;
+    animation: slideIn 0.3s ease;
+  }
+  .next-btn:hover { transform: translateY(-2px); box-shadow: 0 8px 28px rgba(124,58,237,0.5); }
+  .next-btn:active { transform: scale(0.98); }
+
+  /* ===== RESULT SCREEN ===== */
+  .result-card {
+    width: 100%;
+    max-width: 420px;
+    padding: 36px 28px;
+    text-align: center;
+  }
+
+  .result-emoji { font-size: 72px; margin-bottom: 16px; animation: floatLogo 2s ease-in-out infinite; }
+
+  .result-title {
+    font-family: 'Orbitron', sans-serif;
+    font-size: 26px;
+    font-weight: 900;
+    margin-bottom: 8px;
+  }
+
+  .result-subtitle { color: var(--text-sub); margin-bottom: 28px; font-size: 16px; }
+
+  .result-score {
+    font-size: 64px;
+    font-weight: 900;
+    background: linear-gradient(135deg, var(--theme-color), var(--accent2));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    line-height: 1;
+    margin-bottom: 8px;
+  }
+
+  .result-score-label { color: var(--text-sub); font-size: 14px; margin-bottom: 28px; }
+
+  .result-stats {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+    margin-bottom: 28px;
+  }
+
+  .stat-box {
+    padding: 16px;
+    background: var(--btn-bg);
+    border: 1px solid var(--btn-border);
+    border-radius: 14px;
+  }
+  .stat-box .stat-val { font-size: 28px; font-weight: 900; }
+  .stat-box .stat-key { font-size: 12px; color: var(--text-sub); margin-top: 4px; }
+  .stat-box.green .stat-val { color: var(--correct); }
+  .stat-box.red .stat-val { color: var(--wrong); }
+
+  .result-btns { display: flex; flex-direction: column; gap: 12px; }
+
+  .primary-btn {
+    padding: 16px 28px;
+    border-radius: 14px;
+    border: none;
+    background: linear-gradient(135deg, var(--theme-color), var(--accent2));
+    color: #fff;
+    font-family: 'Tajawal', sans-serif;
+    font-size: 18px;
+    font-weight: 800;
+    cursor: pointer;
+    transition: all 0.2s;
+    box-shadow: 0 4px 20px rgba(124,58,237,0.3);
+  }
+  .primary-btn:hover { transform: translateY(-2px); }
+
+  .secondary-btn {
+    padding: 16px 28px;
+    border-radius: 14px;
+    border: 2px solid var(--btn-border);
+    background: var(--btn-bg);
+    color: var(--text);
+    font-family: 'Tajawal', sans-serif;
+    font-size: 18px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+  .secondary-btn:hover { border-color: var(--theme-color); }
+
+  /* ===== PARTICLES ===== */
+  .particle {
+    position: fixed;
+    width: 4px; height: 4px;
+    border-radius: 50%;
+    background: var(--theme-color);
+    opacity: 0.4;
+    pointer-events: none;
+    animation: drift linear infinite;
+  }
+  @keyframes drift {
+    from { transform: translateY(100vh) rotate(0deg); opacity: 0.4; }
+    to   { transform: translateY(-100px) rotate(360deg); opacity: 0; }
+  }
+
+  /* ===== SCROLLBAR ===== */
+  ::-webkit-scrollbar { width: 4px; }
+  ::-webkit-scrollbar-track { background: transparent; }
+  ::-webkit-scrollbar-thumb { background: var(--theme-color); border-radius: 2px; }
+
+  @media (max-height: 700px) {
+    #screen-quiz { padding: 12px; }
+    .quiz-header { margin-bottom: 8px; }
+    .progress-bar-wrap { margin-bottom: 12px; }
+    .question-card { padding: 20px; margin-bottom: 12px; }
+    .answer-btn { padding: 12px 16px; }
+  }
+</style>
+</head>
+<body>
+
+<!-- Particles -->
+<div id="particles"></div>
+
+<!-- ===== MAIN MENU ===== -->
+<div class="screen active" id="screen-menu">
+  <div class="logo-wrap">
+    <div class="logo-icon">🎮</div>
+    <div class="logo-title">QUIZ GAME PRO</div>
+    <div class="logo-sub">اختبر معلوماتك في عالم الألعاب</div>
+  </div>
+
+  <div class="glass menu-card">
+    <div class="menu-title">⚡ اختر القسم</div>
+    <div class="section-btns">
+      <button class="section-btn" onclick="startGame('minecraft')">
+        <div class="s-icon">⛏️</div>
+        <div class="s-text">
+          <div class="s-label">Minecraft</div>
+          <div class="s-count">50 سؤال · مستويات متعددة</div>
+        </div>
+        <div class="s-arrow">‹</div>
+      </button>
+      <button class="section-btn" onclick="startGame('roblox')">
+        <div class="s-icon">🟥</div>
+        <div class="s-text">
+          <div class="s-label">Roblox</div>
+          <div class="s-count">20 سؤال · ممتع وسهل</div>
+        </div>
+        <div class="s-arrow">‹</div>
+      </button>
+      <button class="section-btn" onclick="startGame('games')">
+        <div class="s-icon">🕹️</div>
+        <div class="s-text">
+          <div class="s-label">Games</div>
+          <div class="s-count">20 سؤال · ألعاب متنوعة</div>
+        </div>
+        <div class="s-arrow">‹</div>
+      </button>
+    </div>
+  </div>
+
+  <div class="menu-footer">
+    <button class="icon-btn" onclick="showScreen('screen-settings')" title="الإعدادات">⚙️</button>
+  </div>
+</div>
+
+<!-- ===== SETTINGS ===== -->
+<div class="screen" id="screen-settings">
+  <div class="glass settings-card">
+    <div class="settings-header">
+      <button class="back-btn" onclick="showScreen('screen-menu')">›</button>
+      <div class="settings-title">⚙️ الإعدادات</div>
+    </div>
+
+    <div class="setting-group">
+      <div class="setting-group-label">المظهر</div>
+      <div class="toggle-row">
+        <span class="toggle-label">☀️ الوضع الفاتح</span>
+        <button class="toggle" id="theme-toggle" onclick="toggleTheme()"></button>
+      </div>
+    </div>
+
+    <div class="setting-group">
+      <div class="setting-group-label">لون الثيم</div>
+      <div class="color-options" id="color-options">
+        <div class="color-dot active" style="background:#7c3aed" onclick="setThemeColor('#7c3aed','#06b6d4',this)" title="بنفسجي"></div>
+        <div class="color-dot" style="background:#06b6d4" onclick="setThemeColor('#06b6d4','#7c3aed',this)" title="سماوي"></div>
+        <div class="color-dot" style="background:#10b981" onclick="setThemeColor('#10b981','#06b6d4',this)" title="أخضر"></div>
+        <div class="color-dot" style="background:#f59e0b" onclick="setThemeColor('#f59e0b','#ef4444',this)" title="ذهبي"></div>
+        <div class="color-dot" style="background:#ef4444" onclick="setThemeColor('#ef4444','#f59e0b',this)" title="أحمر"></div>
+        <div class="color-dot" style="background:#ec4899" onclick="setThemeColor('#ec4899','#7c3aed',this)" title="وردي"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ===== QUIZ ===== -->
+<div class="screen" id="screen-quiz">
+  <div class="quiz-header">
+    <button class="back-btn" onclick="showScreen('screen-menu')" style="flex-shrink:0">›</button>
+    <div class="quiz-section-badge">
+      <span id="quiz-section-icon">⛏️</span>
+      <span id="quiz-section-name">Minecraft</span>
+    </div>
+    <div class="quiz-counter"><span id="q-current">1</span> / <span id="q-total">50</span></div>
+    <div class="quiz-score-badge">⭐ <span id="q-score">0</span></div>
+  </div>
+
+  <div class="progress-bar-wrap">
+    <div class="progress-bar-fill" id="progress-fill" style="width:0%"></div>
+  </div>
+
+  <div class="glass question-card" id="question-card">
+    <div class="question-number" id="q-number">سؤال #1</div>
+    <div class="question-text" id="q-text">نص السؤال</div>
+  </div>
+
+  <div class="answers-grid" id="answers-grid"></div>
+
+  <button class="next-btn" id="next-btn" onclick="nextQuestion()">
+    التالي ←
+  </button>
+</div>
+
+<!-- ===== RESULT ===== -->
+<div class="screen" id="screen-result">
+  <div class="glass result-card">
+    <div class="result-emoji" id="result-emoji">🏆</div>
+    <div class="result-title" id="result-title">رائع!</div>
+    <div class="result-subtitle" id="result-subtitle">لقد أنهيت الاختبار</div>
+    <div class="result-score" id="result-score">0%</div>
+    <div class="result-score-label" id="result-score-label">0 من 0 إجابة صحيحة</div>
+    <div class="result-stats">
+      <div class="stat-box green">
+        <div class="stat-val" id="r-correct">0</div>
+        <div class="stat-key">✅ صحيح</div>
+      </div>
+      <div class="stat-box red">
+        <div class="stat-val" id="r-wrong">0</div>
+        <div class="stat-key">❌ خطأ</div>
+      </div>
+    </div>
+    <div class="result-btns">
+      <button class="primary-btn" id="retry-btn" onclick="retryGame()">🔄 إعادة المحاولة</button>
+      <button class="secondary-btn" onclick="showScreen('screen-menu')">🏠 القائمة الرئيسية</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// ============================================================
+// DATA
+// ============================================================
+const SECTIONS = {
+  minecraft: {
+    name: 'Minecraft',
+    icon: '⛏️',
+    questions: [
+      { q: 'ما هو اسم الشخصية الرئيسية في Minecraft؟', a: ['ستيف', 'أليكس', 'نوتش'], c: 0 },
+      { q: 'ما هو الاسم الحقيقي لمنشئ Minecraft؟', a: ['ماركوس بيرسون', 'توبياس مولنر', 'ياري سارينن'], c: 0 },
+      { q: 'كم عدد قلوب الحياة الافتراضية للاعب في Minecraft؟', a: ['10 قلوب', '20 قلباً', '5 قلوب'], c: 0 },
+      { q: 'ما اسم المخلوق الذي ينفجر عند الاقتراب منه؟', a: ['زومبي', 'كريبر', 'سكيلتون'], c: 1 },
+      { q: 'ما هو أندر الخامة في Minecraft؟', a: ['الذهب', 'الداموند', 'نيثرايت'], c: 2 },
+      { q: 'ما هو اسم العالم السفلي في Minecraft؟', a: ['النيثر', 'الإند', 'الأبيس'], c: 0 },
+      { q: 'ما هو اسم البوس الموجود في الإند؟', a: ['وذر', 'ندر دراغون', 'الغيست'], c: 1 },
+      { q: 'كم عدد قطع الخشب اللازمة لصنع طاولة الصنع؟', a: ['2 قطع', '4 قطع', '8 قطع'], c: 1 },
+      { q: 'ما هو الوقود الذي يحرق أطول مدة في الفرن؟', a: ['الفحم', '10 حريقات دفتر', 'كتلة الفحم'], c: 2 },
+      { q: 'كم بلوك عمق الأوقيانوس الأقصى في Minecraft؟', a: ['30', '60', '95'], c: 2 },
+      { q: 'أي من هذه المواد تستخدم لصنع سرير؟', a: ['قطن + خشب', '3 صوف + 3 خشب', 'ريش + خشب'], c: 1 },
+      { q: 'ما اسم الفيلاج الذي يبيع ويشتري مع اللاعب؟', a: ['بلاكسميث', 'فيلاجر', 'ليبراريان'], c: 1 },
+      { q: 'كم قلب صحة للزومبي العادي؟', a: ['20', '10', '15'], c: 0 },
+      { q: 'ما هو اسم الكتاب السحري في Minecraft؟', a: ['إنشانتد بوك', 'سبيلبوك', 'ماجيك تومي'], c: 0 },
+      { q: 'ما هو الهجوم السحري الذي يسبب الحريق؟', a: ['فاير أسبكت', 'فليم', 'بيرنينج'], c: 0 },
+      { q: 'ما البلوك الذي لا يمكن تدميره بأي أداة عادية؟', a: ['الأبسيديان', 'البيدروك', 'الستون'], c: 1 },
+      { q: 'ما اسم المخلوق الطائر في النيثر الذي يطلق كرات النار؟', a: ['بلايز', 'غاست', 'فايرفلاي'], c: 1 },
+      { q: 'ما اسم الزهرة التي تطرد المخلوقات؟', a: ['رددروز', 'تورشفلاور', 'وذر رووز'], c: 2 },
+      { q: 'كم عدد البيضات اللازمة لصنع كعكة؟', a: ['3 بيضات', '2 بيضة', '1 بيضة'], c: 0 },
+      { q: 'أي الأسلحة يُعتبر الأقوى بدون تعديلات سحرية؟', a: ['السيف الداموند', 'سيف النيثرايت', 'الفأس الداموند'], c: 1 },
+      { q: 'ما اسم الشياطين ذات الأذرع الطويلة السوداء؟', a: ['شادوفوك', 'الإندرمان', 'دارككريبر'], c: 1 },
+      { q: 'ما أعلى مستوى للسحر في Minecraft؟', a: ['إنشانتمنت 30', 'لفل 50', 'ماكس 100'], c: 0 },
+      { q: 'ما اسم السمكة التي تعطيك تسمما؟', a: ['كلاون فيش', 'بوفرفيش', 'سالمون'], c: 1 },
+      { q: 'ما الخامة اللازمة لصنع درع كاملة قوية جداً؟', a: ['حديد', 'داموند', 'نيثرايت'], c: 2 },
+      { q: 'ما اسم القرية التي تعتمد على السحر وتبيع مواد سحرية؟', a: ['ويتش هوت', 'ويتش فيلج', 'ويتش ماركت'], c: 0 },
+      { q: 'كم عدد الخانات في صندوق التخزين العادي؟', a: ['27', '36', '54'], c: 0 },
+      { q: 'ما اسم البوس الذي يعيش في صحراء النيثر؟', a: ['وذر سكيلتون', 'الوذر', 'بلايز كينغ'], c: 1 },
+      { q: 'ما البلوك الذي يُستخدم للطيران في Minecraft؟', a: ['كايترافت', 'إيليترا', 'بالون'], c: 1 },
+      { q: 'كم مرحلة تمر بها البيضة قبل أن تفقس الدجاجة؟', a: ['لا توجد مراحل، تفقس مباشرة', 'مرحلة واحدة', '3 مراحل'], c: 0 },
+      { q: 'ما هو أسرع وسيلة تنقل في Minecraft؟', a: ['قارب', 'حصان', 'ملوك دور'], c: 1 },
+      { q: 'أي من هذه الكائنات يعيش فقط في المحيط؟', a: ['سكويد', 'دولفين', 'إيلدر غارديان'], c: 2 },
+      { q: 'ما اسم الشجرة التي تنمو في الصحراء؟', a: ['شجرة الصحراء', 'Cactus ليس شجرة', 'أكاشيا'], c: 1 },
+      { q: 'كم عدد نقاط الجوع الافتراضية للاعب؟', a: ['10', '20', '15'], c: 1 },
+      { q: 'ما اسم الأداة التي تُستخدم لصيد الأسماك؟', a: ['صنارة الصيد', 'شبكة الصيد', 'قضيب الصيد'], c: 0 },
+      { q: 'ما البلوك الذي ينتج ضوءاً أقوى في Minecraft؟', a: ['لانترن', 'جلوستون', 'تورش'], c: 1 },
+      { q: 'ما اسم الحيوان الذي يمكن ركوبه في المحيط؟', a: ['دولفين', 'ستريدر', 'ترتلي'], c: 1 },
+      { q: 'ما الكائن الذي يمنحك شرط الغوص تحت الماء؟', a: ['بافرفيش', 'كوندويت', 'تيرتل شيل'], c: 1 },
+      { q: 'ما اسم الطعام الذي يشفي أكبر قدر من الجوع؟', a: ['خبز', 'لحم خنزير مطبوخ', 'سترد باي'], c: 2 },
+      { q: 'ما هو حجم الخريطة الكاملة الافتراضية؟', a: ['60 مليون × 60 مليون بلوك', '30 مليون × 30 مليون', 'لا نهائية'], c: 0 },
+      { q: 'ما اسم الكائن الذي يتكاثر بالانقسام في الكهوف؟', a: ['باتس', 'سلايم', 'سبايدر'], c: 1 },
+      { q: 'ما اسم البلوك الذي يمنع الحريق من الانتشار؟', a: ['ستون', 'كوبل ستون', 'أبسيديان'], c: 2 },
+      { q: 'ما هو النيثر ريسورس الذي يُستخدم لترقية أدوات الداموند؟', a: ['نيثر جولد', 'نيثرايت إنغوت', 'نيثر كورتز'], c: 1 },
+      { q: 'ما الحيوان الذي يمكن تدجينه بالجزر؟', a: ['خروف', 'أرنب', 'حصان'], c: 1 },
+      { q: 'ما اسم الكائن الشفاف في الليل الذي يطلق النبال؟', a: ['سكيلتون', 'ستراي', 'فانتوم'], c: 0 },
+      { q: 'كم عدد البلوكات اللازمة لبناء بورتال النيثر الأصغر؟', a: ['10', '14', '12'], c: 0 },
+      { q: 'ما اسم النبات المائي الذي يُستخدم لصنع الدواء؟', a: ['غلوسترون', 'ماغما كريم', 'وارتس'], c: 2 },
+      { q: 'ما أقصى عمق للعالم في Minecraft الجديد؟', a: ['-60', '-64', '-128'], c: 1 },
+      { q: 'ما الكائن الذي يصدر صوت "هيس" قبل الانفجار؟', a: ['غاست', 'كريبر', 'كريبر فقط'], c: 1 },
+      { q: 'ما اسم الكائن المائي الذي يهاجمك داخل المعبد المائي؟', a: ['غارديان', 'درانوند', 'سي ويتش'], c: 0 },
+      { q: 'ما هو اسم الأرض الوسطى بين الارتفاع 0 والسطح؟', a: ['سكاي لاند', 'أوفرورلد', 'ميدلاند'], c: 1 },
+      { q: 'كم عدد العيون الكريستالية اللازمة لفتح بورتال الإند؟', a: ['10', '12', '16'], c: 1 },
+    ]
+  },
+
+  roblox: {
+    name: 'Roblox',
+    icon: '🟥',
+    questions: [
+      { q: 'في أي عام تأسست منصة Roblox؟', a: ['2004', '2006', '2010'], c: 1 },
+      { q: 'ما اسم عملة Roblox الافتراضية؟', a: ['روباكس', 'روكوينز', 'روبوكس'], c: 2 },
+      { q: 'ما اسم الموقع الرسمي للعبة Roblox؟', a: ['roblox.net', 'roblox.com', 'playroblox.com'], c: 1 },
+      { q: 'من أسس شركة Roblox؟', a: ['ديفيد بازوكي', 'إيلون ماسك', 'جاك مالون'], c: 0 },
+      { q: 'ما الأداة المستخدمة لبناء الألعاب في Roblox؟', a: ['Roblox Creator', 'Roblox Studio', 'Roblox Builder'], c: 1 },
+      { q: 'ما لغة البرمجة المستخدمة في Roblox؟', a: ['Python', 'Lua', 'JavaScript'], c: 1 },
+      { q: 'ما اسم اللعبة الأكثر شعبية في Roblox؟', a: ['Adopt Me!', 'Brookhaven', 'MeepCity'], c: 0 },
+      { q: 'ما هو الحد الأقصى لعدد أحرف اسم المستخدم في Roblox؟', a: ['16', '20', '25'], c: 1 },
+      { q: 'ما الفئة التي تضم ملابس الشخصية في Roblox؟', a: ['Gear', 'Avatar Shop', 'Catalog'], c: 2 },
+      { q: 'ما اسم ميزة المجموعات الاجتماعية في Roblox؟', a: ['Clans', 'Groups', 'Teams'], c: 1 },
+      { q: 'كم عمر الشخص المطلوب لفتح خاصية الدردشة الكاملة؟', a: ['12', '13', '18'], c: 1 },
+      { q: 'ما اسم برنامج مطوري Roblox للأرباح؟', a: ['DevEx', 'Creator Pay', 'Robux Share'], c: 0 },
+      { q: 'أي من هذه الشخصيات هو Roblox Mascot الرسمي؟', a: ['نوبي', 'كوريسيك', 'مستر Roblox'], c: 0 },
+      { q: 'ما هو الحد الأقصى لعدد اللاعبين في لعبة Roblox واحدة؟', a: ['50', '100', '200'], c: 2 },
+      { q: 'في أي منصة صدر Roblox أولاً؟', a: ['PlayStation', 'PC', 'Xbox'], c: 1 },
+      { q: 'ما هو Roblox Premium؟', a: ['لعبة', 'اشتراك شهري مدفوع', 'نوع من الروباكس'], c: 1 },
+      { q: 'ما أشهر خريطة للمعارك في Roblox؟', a: ['Arsenal', 'Phantom Forces', 'Bad Business'], c: 1 },
+      { q: 'ما هو اختصار UGC في Roblox؟', a: ['User Generated Content', 'Universal Game Creator', 'Unique Game Component'], c: 0 },
+      { q: 'ما هو الحيوان الشهير المرتبط بشخصية Noob في Roblox؟', a: ['دجاجة', 'لا يوجد حيوان', 'دب'], c: 1 },
+      { q: 'ما هو الحد اليومي للروباكس الذي يمكن صرفه عبر DevEx؟', a: ['100,000', '250,000', 'لا يوجد حد'], c: 2 },
+    ]
+  },
+
+  games: {
+    name: 'Games',
+    icon: '🕹️',
+    questions: [
+      { q: 'أي لعبة تستخدم شخصية "ماريو"؟', a: ['Sonic', 'Super Mario', 'Donkey Kong'], c: 1 },
+      { q: 'ما اسم الساحة الشهيرة في لعبة Fortnite؟', a: ['Tilted Towers', 'Dusty Depot', 'Pleasant Park'], c: 0 },
+      { q: 'من هو المطور الرئيسي للعبة GTA V؟', a: ['Ubisoft', 'Rockstar Games', 'EA Sports'], c: 1 },
+      { q: 'كم عدد لاعبي Fortnite في كل مباراة Battle Royale؟', a: ['50', '100', '150'], c: 1 },
+      { q: 'ما اسم السلاح الأيقوني في لعبة Halo؟', a: ['Energy Sword', 'Plasma Rifle', 'Gravity Hammer'], c: 0 },
+      { q: 'في أي لعبة تظهر شخصية "Kratos"؟', a: ['Devil May Cry', 'God of War', 'Assassin\'s Creed'], c: 1 },
+      { q: 'ما الشركة المنتجة للعبة The Legend of Zelda؟', a: ['Sony', 'Nintendo', 'Sega'], c: 1 },
+      { q: 'ما اسم خريطة سبيس ستيشن في Among Us؟', a: ['The Skeld', 'MIRA HQ', 'Polus'], c: 2 },
+      { q: 'في أي عام صدر لعبة Minecraft لأول مرة؟', a: ['2009', '2011', '2013'], c: 1 },
+      { q: 'من هي الشخصية الرئيسية في لعبة Tomb Raider؟', a: ['Jill Valentine', 'Lara Croft', 'Samus Aran'], c: 1 },
+      { q: 'ما اسم العدو الرئيسي في سلسلة Sonic؟', a: ['King Boo', 'Dr. Eggman', 'Bowser'], c: 1 },
+      { q: 'أي لعبة تضمنت فكرة "Battle Royale" أولاً على نطاق واسع؟', a: ['Fortnite', 'PUBG', 'Warzone'], c: 1 },
+      { q: 'كم عدد أجزاء لعبة Dark Souls الرئيسية؟', a: ['2', '3', '4'], c: 1 },
+      { q: 'ما اسم العاصمة في لعبة Skyrim؟', a: ['White Run', 'Solitude', 'Riften'], c: 1 },
+      { q: 'من هو مطور لعبة Overwatch؟', a: ['Valve', 'Blizzard Entertainment', 'Riot Games'], c: 1 },
+      { q: 'ما هي لعبة البطولة التي ابتكرت شخصية "Pikachu"؟', a: ['Digimon', 'Pokémon', 'Tamagotchi'], c: 1 },
+      { q: 'في أي منصة صدرت لعبة God of War (2018) حصرياً؟', a: ['Xbox', 'Nintendo Switch', 'PlayStation 4'], c: 2 },
+      { q: 'ما هو اسم الحصان في لعبة The Legend of Zelda: Ocarina of Time؟', a: ['Roach', 'Epona', 'Spirit'], c: 1 },
+      { q: 'أي لعبة تشتهر بمصطلح "Victory Royale"؟', a: ['PUBG', 'Fortnite', 'Apex Legends'], c: 1 },
+      { q: 'ما الشركة التي طورت لعبة League of Legends؟', a: ['Riot Games', 'Valve', 'Blizzard'], c: 0 },
+    ]
+  }
+};
+
+// ============================================================
+// STATE
+// ============================================================
+let currentSection = null;
+let currentQuestions = [];
+let currentIndex = 0;
+let score = 0;
+let answered = false;
+
+// ============================================================
+// SCREENS
+// ============================================================
+function showScreen(id) {
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+  if (id === 'screen-quiz') {
+    document.getElementById('screen-quiz').scrollTop = 0;
+  }
+}
+
+// ============================================================
+// GAME
+// ============================================================
+function startGame(section) {
+  currentSection = section;
+  currentQuestions = [...SECTIONS[section].questions];
+  // Shuffle
+  for (let i = currentQuestions.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [currentQuestions[i], currentQuestions[j]] = [currentQuestions[j], currentQuestions[i]];
+  }
+  currentIndex = 0;
+  score = 0;
+
+  const sec = SECTIONS[section];
+  document.getElementById('quiz-section-icon').textContent = sec.icon;
+  document.getElementById('quiz-section-name').textContent = sec.name;
+  document.getElementById('q-total').textContent = currentQuestions.length;
+
+  showScreen('screen-quiz');
+  loadQuestion();
+}
+
+function loadQuestion() {
+  answered = false;
+  const q = currentQuestions[currentIndex];
+  const total = currentQuestions.length;
+
+  document.getElementById('q-current').textContent = currentIndex + 1;
+  document.getElementById('q-score').textContent = score;
+  document.getElementById('q-number').textContent = `سؤال #${currentIndex + 1}`;
+  document.getElementById('q-text').textContent = q.q;
+
+  const pct = (currentIndex / total) * 100;
+  document.getElementById('progress-fill').style.width = pct + '%';
+
+  // Rebuild answers
+  const grid = document.getElementById('answers-grid');
+  grid.innerHTML = '';
+  const labels = ['أ', 'ب', 'ج'];
+
+  // Shuffle answers
+  const indices = [0, 1, 2];
+  for (let i = 2; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [indices[i], indices[j]] = [indices[j], indices[i]];
+  }
+
+  const shuffledAnswers = indices.map(i => ({ text: q.a[i], original: i }));
+  const correctOriginal = q.c;
+
+  shuffledAnswers.forEach((ans, idx) => {
+    const btn = document.createElement('button');
+    btn.className = 'answer-btn';
+    btn.innerHTML = `<div class="ans-label">${labels[idx]}</div><span>${ans.text}</span>`;
+    btn.onclick = () => selectAnswer(btn, ans.original === correctOriginal, shuffledAnswers, correctOriginal, grid);
+    grid.appendChild(btn);
+  });
+
+  // Store correct index on grid for later
+  grid.dataset.correctOriginal = correctOriginal;
+  grid.dataset.shuffled = JSON.stringify(shuffledAnswers);
+
+  const nextBtn = document.getElementById('next-btn');
+  nextBtn.style.display = 'none';
+
+  // Animate card
+  const card = document.getElementById('question-card');
+  card.style.animation = 'none';
+  setTimeout(() => { card.style.animation = 'slideIn 0.4s ease'; }, 10);
+
+  document.getElementById('screen-quiz').scrollTop = 0;
+}
+
+function selectAnswer(btn, isCorrect, shuffledAnswers, correctOriginal, grid) {
+  if (answered) return;
+  answered = true;
+
+  const allBtns = grid.querySelectorAll('.answer-btn');
+  allBtns.forEach(b => b.disabled = true);
+
+  if (isCorrect) {
+    btn.classList.add('correct');
+    score++;
+    document.getElementById('q-score').textContent = score;
+  } else {
+    btn.classList.add('wrong');
+    // Show correct
+    allBtns.forEach((b, idx) => {
+      if (shuffledAnswers[idx].original === correctOriginal) {
+        b.classList.add('show-correct');
+      }
+    });
+  }
+
+  const nextBtn = document.getElementById('next-btn');
+  nextBtn.style.display = 'flex';
+  nextBtn.textContent = currentIndex + 1 >= currentQuestions.length ? '🏁 النتائج' : 'التالي ←';
+
+  setTimeout(() => {
+    document.getElementById('screen-quiz').scrollTop = 9999;
+  }, 300);
+}
+
+function nextQuestion() {
+  currentIndex++;
+  if (currentIndex >= currentQuestions.length) {
+    showResult();
+  } else {
+    loadQuestion();
+  }
+}
+
+function showResult() {
+  const total = currentQuestions.length;
+  const pct = Math.round((score / total) * 100);
+
+  let emoji, title, subtitle;
+  if (pct >= 90) { emoji = '🏆'; title = 'أسطوري!'; subtitle = 'أداء مذهل، أنت خبير حقيقي!'; }
+  else if (pct >= 70) { emoji = '🌟'; title = 'ممتاز!'; subtitle = 'نتيجة رائعة، استمر!'; }
+  else if (pct >= 50) { emoji = '👍'; title = 'جيد!'; subtitle = 'يمكنك تحسين نتيجتك!'; }
+  else { emoji = '📚'; title = 'حاول مجدداً'; subtitle = 'المزيد من التدريب يُفيد!'; }
+
+  document.getElementById('result-emoji').textContent = emoji;
+  document.getElementById('result-title').textContent = title;
+  document.getElementById('result-subtitle').textContent = subtitle;
+  document.getElementById('result-score').textContent = pct + '%';
+  document.getElementById('result-score-label').textContent = `${score} من ${total} إجابة صحيحة`;
+  document.getElementById('r-correct').textContent = score;
+  document.getElementById('r-wrong').textContent = total - score;
+
+  const sec = SECTIONS[currentSection];
+  document.getElementById('retry-btn').textContent = `🔄 إعادة ${sec.name}`;
+
+  showScreen('screen-result');
+}
+
+function retryGame() { startGame(currentSection); }
+
+// ============================================================
+// SETTINGS
+// ============================================================
+let isDark = true;
+
+function toggleTheme() {
+  isDark = !isDark;
+  document.documentElement.setAttribute('data-theme', isDark ? 'dark' : 'light');
+  document.getElementById('theme-toggle').classList.toggle('on', !isDark);
+}
+
+function setThemeColor(color, accent2, dot) {
+  document.documentElement.style.setProperty('--theme-color', color);
+  document.documentElement.style.setProperty('--accent', color);
+  document.documentElement.style.setProperty('--accent2', accent2);
+  document.querySelectorAll('.color-dot').forEach(d => d.classList.remove('active'));
+  dot.classList.add('active');
+}
+
+// ============================================================
+// PARTICLES
+// ============================================================
+function createParticles() {
+  const container = document.getElementById('particles');
+  const colors = ['#7c3aed', '#06b6d4', '#10b981', '#f59e0b', '#ec4899'];
+  for (let i = 0; i < 18; i++) {
+    const p = document.createElement('div');
+    p.className = 'particle';
+    p.style.cssText = `
+      left: ${Math.random() * 100}%;
+      width: ${2 + Math.random() * 4}px;
+      height: ${2 + Math.random() * 4}px;
+      background: ${colors[Math.floor(Math.random() * colors.length)]};
+      animation-duration: ${6 + Math.random() * 10}s;
+      animation-delay: ${-Math.random() * 10}s;
+      opacity: ${0.2 + Math.random() * 0.3};
+    `;
+    container.appendChild(p);
+  }
+}
+
+createParticles();
+</script>
+</body>
+</html>
